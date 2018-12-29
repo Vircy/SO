@@ -8,14 +8,13 @@
 
 #define KEY (1492)
 
-
 int main(int argc, char** argv){
     unsigned int POP_SIZE = 5; 
     int sem;
-    sembuf* semops = malloc(sizeof(sembuf)*1);
+    struct sembuf* semops = malloc(sizeof(struct sembuf)*1);
     semops->sem_num = 0;
     semops->sem_op = POP_SIZE;
-    semops->sem_lfg = IPC_NOWAIT;
+    semops->sem_flg = IPC_NOWAIT;
 
     sem = semget(KEY, 1, 0644 | IPC_EXCL | IPC_CREAT);
     semop(sem, semops, 1);
