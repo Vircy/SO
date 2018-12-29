@@ -2,14 +2,25 @@
 #include <stdlib.h>
 #include <wait.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+
+#define KEY (1492)
+
 
 int main(int argc, char** argv){
-    int POP_SIZE = 5;
-    //const char sonFile[8] = "STUDENT";
-    // char *argv[] = { NULL };
+    unsigned int POP_SIZE = 5; 
+    int sem;
+    sembuf* semops = malloc(sizeof(sembuf)*1);
+    semops->sem_num = 0;
+    semops->sem_op = POP_SIZE;
+    semops->sem_lfg = IPC_NOWAIT;
 
+    sem = semget(KEY, 1, 0644 | IPC_EXCL | IPC_CREAT);
+    semop(sem, semops, 1);
     for(int i=0;i<POP_SIZE;i++){ // loop will run n times 
-     
+
         printf("\n POP_SIZE : %d" , i);
         if(fork() == 0){  
             execve ("STUDENT", argv, NULL);
