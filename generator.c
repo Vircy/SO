@@ -5,16 +5,23 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/shm.h>
 #include "semops.h" // my header
 
-#define KEY 1493
-#define POP_SIZE 5
 
+#define POP_SIZE 5
 #define DEBUG 0
+
+
+
+
+
+
+
 
 int seminit(){
     int semId;
-
+    
     // Check if semkey already exists, if so delete it
     semId = semget(KEY, 1, 0666);
     if (semId != -1) {
@@ -42,6 +49,11 @@ int main(int argc, char** argv){
     //printf("Startig ...");
     int sem = seminit();
     int size=0;
+    int shmId;
+    //key_t shmkey = IPC_PRIVATE;
+    //Creae a shared memory
+    shmId = shmget(shmkey ,sizeof(int)*(POP_SIZE+1), IPC_CREAT | 0666);
+
     printf("\nSem inited");
 
     for(int i = 0; i < POP_SIZE; i++) { // loop will run n times 

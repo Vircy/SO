@@ -8,6 +8,7 @@
 #include <sys/sem.h>
 
 #define KEY 1493
+#define shmkey IPC_PRIVATE
 
 union semun {
     int val;

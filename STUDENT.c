@@ -6,11 +6,21 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/shm.h>
 #include "semops.h" // my header
-#define KEY 1493
+
+
 
 
 int main(int argc, char** argv){
+    struct shmsg* shmp;//pointer to the shared memory
+
+    shmp = (struct shmseg*)shmat(shmkey, NULL, 0);
+        if(shmp == (void*)-1 ){
+            printf("errore nel collegamento della SHM in student");
+            exit(-1);
+        }
+
     srand(getpid());
     int turno;
     int votoAE = (rand()% 13)+18;
