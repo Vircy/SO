@@ -7,8 +7,9 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
+#define POP_SIZE 5
 #define KEY 1493
-#define shmkey IPC_PRIVATE
+#define shmkey 123 //IPC_PRIVATE
 
 union semun {
     int val;
