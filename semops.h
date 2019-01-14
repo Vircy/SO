@@ -9,7 +9,8 @@
 
 #define POP_SIZE 5
 #define KEY 1493
-#define shmkey 123 //IPC_PRIVATE
+#define KEYBIN 1494
+#define shmkey 123
 
 union semun {
     int val;
@@ -24,3 +25,6 @@ struct sembuf* generateReduceOp();
 
 
 struct sembuf* generateWaitOp();
+
+
+struct sembuf* generateIncreaseOp();

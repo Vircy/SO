@@ -7,9 +7,9 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-#define POP_SIZE 5
-#define KEY 1493
-#define shmkey IPC_PRIVATE
+//#define POP_SIZE 5
+//#define KEY 1493
+///#define shmkey IPC_PRIVATE
 
 union semun {
     int val;
@@ -38,4 +38,14 @@ struct sembuf* generateWaitOp(){
     waitOp->sem_flg = 0;
     
     return semWait;
+}
+struct sembuf* generateIncreaseOp(){
+    struct sembuf* semIncrease = malloc(sizeof(struct sembuf)*1);
+    
+    struct sembuf* increaseOp = &semIncrease[0];
+    increaseOp->sem_num = 0;
+    increaseOp->sem_op = 1;
+    increaseOp->sem_flg = 0;
+
+    return semIncrease;
 }

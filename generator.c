@@ -41,17 +41,43 @@ int seminit(){
     return semId;
 }
 
+int semBinInit(){
+    int semIdB;
+    
+    // Check if semkey already exists, if so delete it
+    semIdB = semget(KEYBIN, 1, 0666);
+    if (semIdB != -1) {
+        semctl(semIdB, 0, IPC_RMID);
+    }
+
+    // Create new semaphore
+    semIdB = semget(KEYBIN, 1, 0666 | IPC_CREAT | IPC_EXCL);
+    if(semIdB == -1) {
+        printf("error on semaphore creation");
+        exit(-1);
+    }
+
+    // Initialise semaphore
+    union semun argsB;
+    argsB.val = 0; //+debug
+    semctl(semIdB, 0, SETVAL, argsB.val);
+    return semIdB;
+}
+
+
 
 
 int main(int argc, char** argv){
 
     //printf("Startig ...");
     int sem = seminit();
+    int semBin = semBinInit();
     int size=0;
     int shmId;
     int *shmp;
     int t=0;
     struct shmid_ds *buf; 
+
     //Creae a shared memory
     shmId = shmget(shmkey ,sizeof(int)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
     printf("shmID di creazione = %d", shmId);

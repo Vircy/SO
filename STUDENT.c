@@ -16,31 +16,45 @@ int main(int argc, char** argv){
     int *shmp;//pointer to the shared memory
     int shmId;
     int i =0;
+    int semB;
+    struct sembuf* reduceOp = generateReduceOp();
+    struct sembuf* waitOp = generateWaitOp();
+    struct sembuf* increaseOp = generateIncreaseOp();
+    semB = semget(KEYBIN, 1, 0666);
     shmId = shmget(shmkey ,0 , 0);//sizeof(int)*(POP_SIZE)
     if( shmId == -1 ){
             printf("\n errore nel collegamento della SHM in student");
             exit(-1);
         }
+
     shmp = ( int*)shmat(shmId, NULL, 0);
         if(shmp == (void*)-1 ){
             printf("errore nell apertura della SHM in student");
             exit(-1);
         }
+    //struct sembuf* waitOp = generateWaitOp();
+   // struct sembuf* increaseOp = generateIncreaseOp();
+   semop(semB,waitOp,1);
+   semop(semB,increaseOp,1);
     while(shmp != NULL  && shmp[i] != 0){
+        printf("\nsono nel whil, i vale : %d", i);
         i++;
     }
     printf("\n  il valore di shmId student è %d", shmId);
     shmp[i] = getpid();
     printf("\n scriveo nella shm %d", shmp[i]);
+    semop(semB,reduceOp,1);
+
+
+
     srand(getpid());
     int turno;
     int votoAE = (rand()% 13)+18;
     int sem = semget(KEY, 1, 0666);
-   // printf("semaforo sem %d" , sem);
-    //perror("\nTestFiglio");
-    struct sembuf* reduceOp = generateReduceOp();
-    struct sembuf* waitOp = generateWaitOp();
-    //perror("\nGenerated wait ops");
+  
+    //struct sembuf* reduceOp = generateReduceOp();
+   // struct sembuf* waitOp = generateWaitOp();
+   
     if(getpid()%2 == 0){
         turno = 1;
     }else{
