@@ -8,18 +8,28 @@
 #include <sys/sem.h>
 #include <sys/shm.h>
 #include "semops.h" // my header
-
+#include <stdbool.h>
 
 
 
 int main(int argc, char** argv){
-    int *shmp;//pointer to the shared memory
+    struct Students *shmp;//pointer to the shared memory
     int shmId;
     int i =0;
     int semB;
     struct sembuf* reduceOp = generateReduceOp();
     struct sembuf* waitOp = generateWaitOp();
     struct sembuf* increaseOp = generateIncreaseOp();
+    struct Students std;
+    if(getpid()%2 == 0){
+        std.turn = 1;
+    }else{
+        std.turn = 2;
+    }
+    std.id = getpid();
+    std.vote = (rand()% 13)+18;
+    std.groupSize = 4;
+
     semB = semget(KEYBIN, 1, 0666);
     shmId = shmget(shmkey ,0 , 0);//sizeof(int)*(POP_SIZE)
     if( shmId == -1 ){
@@ -27,7 +37,7 @@ int main(int argc, char** argv){
             exit(-1);
         }
 
-    shmp = ( int*)shmat(shmId, NULL, 0);
+    shmp = ( struct Students*)shmat(shmId, NULL, 0);
         if(shmp == (void*)-1 ){
             printf("errore nell apertura della SHM in student");
             exit(-1);
@@ -36,34 +46,27 @@ int main(int argc, char** argv){
    // struct sembuf* increaseOp = generateIncreaseOp();
    semop(semB,waitOp,1);
    semop(semB,increaseOp,1);
-    while(shmp != NULL  && shmp[i] != 0){
+    while(shmp != NULL  && shmp[i].id != 0){
         printf("\nsono nel whil, i vale : %d", i);
         i++;
     }
     printf("\n  il valore di shmId student è %d", shmId);
-    shmp[i] = getpid();
-    printf("\n scriveo nella shm %d", shmp[i]);
+    shmp[i] = std;
+    printf("\n scriveo nella shm %d", shmp[i].id);
     semop(semB,reduceOp,1);
 
 
 
     srand(getpid());
     int turno;
-    int votoAE = (rand()% 13)+18;
-    int sem = semget(KEY, 1, 0666);
-  
-    //struct sembuf* reduceOp = generateReduceOp();
-   // struct sembuf* waitOp = generateWaitOp();
-   
+    int votoAE = (rand()% 13)+18;                                   //copie di dati, dovrò eliminarle
+    int sem = semget(KEY, 1, 0666); 
     if(getpid()%2 == 0){
         turno = 1;
     }else{
         turno = 2;
     }
-    //perror("\nExecuting reduce ops");
     semop (sem , reduceOp , 1);
-    //perror("\nExecuting wait ops");
-    semop(sem , waitOp, 1);
-    //perror("\nDone waiting");
+    semop(sem , waitOp, 1);                //w8tinf for other processes
     printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);
 }

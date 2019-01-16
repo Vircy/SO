@@ -7,7 +7,7 @@
 #include <sys/sem.h>
 #include <sys/shm.h>
 #include "semops.h" // my header
-
+#include <stdbool.h>
 
 #define DEBUG 0
 
@@ -74,12 +74,12 @@ int main(int argc, char** argv){
     int semBin = semBinInit();
     int size=0;
     int shmId;
-    int *shmp;
+    struct Students *shmp;
     int t=0;
     struct shmid_ds *buf; 
 
     //Creae a shared memory
-    shmId = shmget(shmkey ,sizeof(int)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
+    shmId = shmget(shmkey ,sizeof(struct Students)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
     printf("shmID di creazione = %d", shmId);
 
     for(int i = 0; i < POP_SIZE; i++) { 
@@ -106,11 +106,11 @@ int main(int argc, char** argv){
     }  
 
     
-    shmp = ( int*)shmat(shmId, NULL, 0); 
+    shmp = ( struct Students*)shmat(shmId, NULL, 0); 
     shmctl(shmId,IPC_SET, buf);
      printf("\n wait terminata, il valore di shmp in generator è %p", shmp);
     while(t < POP_SIZE){
-        printf("\nSHM figlio con pid : %d", shmp[t]);
+        printf("\nSHM figlio con pid : %d", shmp[t].id);
         t++;
     }
     shmctl(shmId,IPC_RMID, NULL);

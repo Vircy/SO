@@ -6,7 +6,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-
+#include <stdbool.h>
 #define POP_SIZE 5
 #define KEY 1493
 #define KEYBIN 1494
@@ -20,6 +20,23 @@ union semun {
     struct seminfo* __buf;
     #endif
 };
+
+struct Groups{
+    int size ;
+    int leader;
+    int mSize;
+    bool full;
+}group;
+
+
+struct Students {
+    int turn;
+    int id;
+    int vote;
+    int groupSize;
+    bool assigned;
+    bool closedGrouop;
+}student;
 
 struct sembuf* generateReduceOp();
 
