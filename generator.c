@@ -77,8 +77,12 @@ int main(int argc, char** argv){
     struct Students *shmp;
     int t=0;
     struct shmid_ds *buf; 
-
+    int clean;
     //Creae a shared memory
+    if(shmId = shmget(shmkey ,0 , 0) != -1){
+        clean = shmctl(shmId,IPC_RMID, NULL);
+        printf("pulisco una vecchia SHM, funzione = %d", clean);
+    }
     shmId = shmget(shmkey ,sizeof(struct Students)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
     printf("shmID di creazione = %d", shmId);
 
@@ -91,11 +95,12 @@ int main(int argc, char** argv){
                 printf("\nError executing student process");
                 exit(1);
             }
-        }
-        else if (fork_res == -1) {
+        
+        }else if (fork_res == -1) {
             printf("\nError forking parent process");
             exit(1);
         }
+        printf("\n started student %d with pid = %d\n", i , fork_res);
     }
 
     struct sembuf* waitOp = generateWaitOp();

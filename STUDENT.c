@@ -46,18 +46,15 @@ int main(int argc, char** argv){
    // struct sembuf* increaseOp = generateIncreaseOp();
    semop(semB,waitOp,1);
    semop(semB,increaseOp,1);
-    while(shmp != NULL  && shmp[i].id != 0){
-        printf("\nsono nel whil, i vale : %d", i);
+    while( /*shmp[i] != NULL  && */shmp[i].id != 0){
+        printf("\nsono nel while, i vale : %d\n", i);
         i++;
     }
-    printf("\n  il valore di shmId student è %d", shmId);
+    printf("\n  il valore di shmId student è %d\n", shmId);
     shmp[i] = std;
-    printf("\n scriveo nella shm %d", shmp[i].id);
+    printf("\n scrivo nella shm %d\n", shmp[i].id);
     semop(semB,reduceOp,1);
 
-
-
-    srand(getpid());
     int turno;
     int votoAE = (rand()% 13)+18;                                   //copie di dati, dovrò eliminarle
     int sem = semget(KEY, 1, 0666); 
@@ -66,7 +63,17 @@ int main(int argc, char** argv){
     }else{
         turno = 2;
     }
+
+
     semop (sem , reduceOp , 1);
     semop(sem , waitOp, 1);                //w8tinf for other processes
-    printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);
+   // printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);
+
+   /* while(true){//ciclo fino a che non ricevo un segnale di interrupt -> fine timer o accetto un invito
+        if(shmp[i].vote>25){
+            //segnale invito a quelli dello steso turno
+        } else{
+            //ascolto per inviti 
+        }
+    } */
 }
