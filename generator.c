@@ -78,11 +78,24 @@ int main(int argc, char** argv){
     int t=0;
     struct shmid_ds *buf; 
     int clean;
+    int msgqI;
+    int msgqR;
     //Creae a shared memory
     if(shmId = shmget(shmkey ,0 , 0) != -1){
         clean = shmctl(shmId,IPC_RMID, NULL);
         printf("pulisco una vecchia SHM, funzione = %d", clean);
     }
+    
+    if(msgget(msgkey , 0666 )!=-1){
+        printf("errore nella creazione della MSGQ");
+        msgctl(msgkey , IPC_RMID,0 );////////////////////////////////////DA VERIFICARE L'ULIMO PARAMETRO
+    }
+    if(msgget(msgkeyReply , 0666 )!=-1){
+        printf("errore nella creazione della MSGQ");
+        msgctl(msgkeyReply , IPC_RMID,0 );////////////////////////////////////DA VERIFICARE L'ULIMO PARAMETRO
+    }
+    msgqI = msgget (msgkey , IPC_CREAT | 0666);
+    msgqR = msgget (msgkeyReply, IPC_CREAT | 0666);
     shmId = shmget(shmkey ,sizeof(struct Students)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
     printf("shmID di creazione = %d", shmId);
 

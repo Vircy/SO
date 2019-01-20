@@ -7,11 +7,15 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 #include <stdbool.h>
-#define POP_SIZE 5
+#include <sys/msg.h>
+
+
+#define POP_SIZE 100
 #define KEY 1493
 #define KEYBIN 1494
 #define shmkey 123
-
+#define msgkey 1495
+#define msgkeyReply 1496
 union semun {
     int val;
     struct semid_ds* buf;
@@ -20,6 +24,20 @@ union semun {
     struct seminfo* __buf;
     #endif
 };
+
+struct MyInvites{
+    long mtype;
+    int from;
+    int vote;
+    int group;
+}myInvite;
+
+struct MyReplys{
+    long mtype;
+    int from;
+    bool reply;
+}myReply;
+
 
 struct Groups{
     int size ;
@@ -34,8 +52,7 @@ struct Students {
     int id;
     int vote;
     int groupSize;
-    bool assigned;
-    bool closedGrouop;
+    bool group;
 }student;
 
 struct sembuf* generateReduceOp();
