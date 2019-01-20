@@ -80,24 +80,27 @@ int main(int argc, char** argv){
     int clean;
     int msgqI;
     int msgqR;
+    int cecker;
     //Creae a shared memory
     if(shmId = shmget(shmkey ,0 , 0) != -1){
         clean = shmctl(shmId,IPC_RMID, NULL);
         printf("pulisco una vecchia SHM, funzione = %d", clean);
     }
     
-    if(msgget(msgkey , 0666 )!=-1){
+    if((msgqI = msgget(msgkey , 0666 ))!=-1){
         printf("errore nella creazione della MSGQ");
-        msgctl(msgkey , IPC_RMID,0 );////////////////////////////////////DA VERIFICARE L'ULIMO PARAMETRO
+        msgctl(msgqI , IPC_RMID, NULL);////////////////////////////////////DA VERIFICARE L'ULIMO PARAMETRO
     }
-    if(msgget(msgkeyReply , 0666 )!=-1){
+    if((msgqR = msgget(msgkeyReply , 0666 ))!=-1){
         printf("errore nella creazione della MSGQ");
-        msgctl(msgkeyReply , IPC_RMID,0 );////////////////////////////////////DA VERIFICARE L'ULIMO PARAMETRO
+        msgctl(msgqR , IPC_RMID, NULL );////////////////////////////////////DA VERIFICARE L'ULIMO PARAMETRO
     }
     msgqI = msgget (msgkey , IPC_CREAT | 0666);
+    printf("\n msgI = %d", msgqI);
     msgqR = msgget (msgkeyReply, IPC_CREAT | 0666);
+    printf("\n msgR = %d", msgqR);
     shmId = shmget(shmkey ,sizeof(struct Students)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
-    printf("shmID di creazione = %d", shmId);
+    //printf("shmID di creazione = %d", shmId);
 
     for(int i = 0; i < POP_SIZE; i++) { 
        printf("\nStarting student %d", i);
@@ -123,6 +126,8 @@ int main(int argc, char** argv){
      wait(NULL);
     }  
 
+
+
     
     shmp = ( struct Students*)shmat(shmId, NULL, 0); 
     shmctl(shmId,IPC_SET, buf);
@@ -131,5 +136,9 @@ int main(int argc, char** argv){
         printf("\nSHM figlio con pid : %d", shmp[t].id);
         t++;
     }
+
+    printf ("\n   in vero in print true = %d" , true);
     shmctl(shmId,IPC_RMID, NULL);
+    msgctl(msgqI , IPC_RMID, NULL);
+    msgctl(msgqR , IPC_RMID, NULL);
 }

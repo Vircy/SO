@@ -83,7 +83,9 @@ int main(int argc, char** argv){
     int counter=0;
     int maxInvites = (shmp[i].groupSize) -1;
     bool leader = false;
+    
     for(int maxTotal= 20 ; maxTotal > 0 ; maxTotal--){
+        
         while(msgrcv(msgReply , &myReply, sizeof(struct MyReplys), getpid(),IPC_NOWAIT) != -1){  //    ceckReply
             if(myReply.reply == true){
                 leader = true;
@@ -115,8 +117,9 @@ int main(int argc, char** argv){
                 }
             }
 
-        
+                
                 while(shmp[counter].vote != 0 && maxInvites>0){//send invites
+                    printf("\nGIGANTE");
                 if(i != counter){
                     if(shmp[counter].group == false){
                         if(shmp[counter].groupSize == shmp[i].groupSize){//pick a group mate fom SHM
@@ -125,6 +128,7 @@ int main(int argc, char** argv){
                             myInvite.vote= shmp[i].vote;
                             myInvite.group=shmp[i].groupSize;
                             maxInvites--;
+                            
                         msgsnd(msgInvite,&myInvite,sizeof(struct MyInvites),0);
     
                         }

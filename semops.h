@@ -10,12 +10,12 @@
 #include <sys/msg.h>
 
 
-#define POP_SIZE 100
+#define POP_SIZE 2
 #define KEY 1493
 #define KEYBIN 1494
 #define shmkey 123
-#define msgkey 1495
-#define msgkeyReply 1496
+#define msgkey 2001
+#define msgkeyReply 2002
 union semun {
     int val;
     struct semid_ds* buf;
