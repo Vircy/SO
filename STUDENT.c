@@ -34,13 +34,13 @@ int main(int argc, char** argv){
     std.vote = (rand()% 13)+18;
     std.groupSize = 2;
     std.group = false;
-
-    if(msgInvite = msgget(msgkey , 0 ) == -1 ){
+    msgInvite = msgget(msgkey ,0);
+    if(msgInvite == -1 ){
         printf("error opening the MSGQ from student");
         exit(-1);
     }
-
-    if(msgReply = msgget(msgkeyReply , 0 ) == -1 ){
+    msgReply = msgget(msgkeyReply ,0 );
+    if(msgReply  == -1 ){
         printf("error opening the MSGQ from student");
         exit(-1);
     }
@@ -60,11 +60,11 @@ int main(int argc, char** argv){
    semop(semB,waitOp,1);
    semop(semB,increaseOp,1);
     while( shmp[i].id != 0){
-        printf("\nsono nel while, i vale : %d\n", i);
+        //printf("\nsono nel while, i vale : %d\n", i);
         i++;
     }
     shmp[i] = std;
-    printf("\n scrivo nella shm %d , sono il figlio di pid = %d\n", shmp[i].id , getpid());
+    //printf("\n scrivo nella shm %d , sono il figlio di pid = %d\n", shmp[i].id , getpid());
     semop(semB,reduceOp,1);
 
     int turno;
@@ -82,11 +82,12 @@ int main(int argc, char** argv){
 
     int counter=0;
     int maxInvites = (shmp[i].groupSize) -1;
+    printf("\n maxInvites of student = %d", maxInvites);
     bool leader = false;
-    
-    for(int maxTotal= 20 ; maxTotal > 0 ; maxTotal--){
-        
+    for(int maxTotal= 5 ; maxTotal > 0 ; maxTotal--){
+      printf("\n valore di maxTotal = %d", maxTotal);
         while(msgrcv(msgReply , &myReply, sizeof(struct MyReplys), getpid(),IPC_NOWAIT) != -1){  //    ceckReply
+           printf("\n cerco risposte");
             if(myReply.reply == true){
                 leader = true;
                 semop(semB,waitOp,1);
@@ -96,14 +97,18 @@ int main(int argc, char** argv){
             }else if(myReply.reply = false){
                 maxInvites+1;
             }
-
-
-            while(msgrcv(msgInvite , &myInvite, sizeof(struct MyInvites), getpid(),IPC_NOWAIT) != -1){  // ceckInvites
+            
+        }
+        while(msgrcv(msgInvite , &myInvite, sizeof(struct MyInvites), getpid(),IPC_NOWAIT) != -1){  // ceckInvites
+        printf("\n cerco inviti");
                 if(myInvite.group == shmp[i].groupSize  && shmp[i].group == false){
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
                     myReply.reply = true;
-                    msgsnd(msgReply,&myReply,sizeof(struct MyReplys),0); //send Accept
+                    if(msgsnd(msgReply,&myReply,sizeof(struct MyReplys),0)== -1){//send Accept
+                        printf("\n error sendin a message inside ceckInvites ( OK)");
+                        exit(-1);
+                    } 
                     semop(semB,waitOp,1);
                     semop(semB,increaseOp,1);
                     shmp[i].group = true;
@@ -113,13 +118,14 @@ int main(int argc, char** argv){
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
                     myReply.reply = false;
-                    msgsnd(msgReply,&myReply,sizeof(struct MyReplys),0); //send refuse
+                    if(msgsnd(msgReply,&myReply,sizeof(struct MyReplys),0)== -1){//send Accept
+                        printf("\n error sendin a message inside ceckInvites (NOPE)");
+                        exit(-1);
+                    }  //send refuse
                 }
             }
-
-                
-                while(shmp[counter].vote != 0 && maxInvites>0){//send invites
-                    printf("\nGIGANTE");
+            while(shmp[counter].vote != 0 && maxInvites>0){//send invites
+                   
                 if(i != counter){
                     if(shmp[counter].group == false){
                         if(shmp[counter].groupSize == shmp[i].groupSize){//pick a group mate fom SHM
@@ -128,18 +134,20 @@ int main(int argc, char** argv){
                             myInvite.vote= shmp[i].vote;
                             myInvite.group=shmp[i].groupSize;
                             maxInvites--;
-                            
-                        msgsnd(msgInvite,&myInvite,sizeof(struct MyInvites),0);
-    
+                            if(msgsnd(msgInvite,(void *)&myInvite,sizeof(struct MyInvites),0)== -1){
+                                printf("\nerror sendin a message on the invites Q");
+                                exit(-1);
+                            }
+                            printf("\n invite sent form %d", shmp[counter].id);
                         }
                     }
                 }
-                }
-                if(maxInvites>0){
+                counter++;
+            }
+              /*  if(maxInvites>0){
                     ///////////NON HO TROVATO PERSONE DA INVITARE MA SONO SOLO  ( MI CHIUDO DA SOLO?)
 
-                }  
-        }
+                }  */
     }
 }
    // printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);

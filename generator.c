@@ -82,7 +82,7 @@ int main(int argc, char** argv){
     int msgqR;
     int cecker;
     //Creae a shared memory
-    if(shmId = shmget(shmkey ,0 , 0) != -1){
+    if((shmId = shmget(shmkey ,0 , 0)) != -1){
         clean = shmctl(shmId,IPC_RMID, NULL);
         printf("pulisco una vecchia SHM, funzione = %d", clean);
     }
@@ -138,7 +138,10 @@ int main(int argc, char** argv){
     }
 
     printf ("\n   in vero in print true = %d" , true);
-    shmctl(shmId,IPC_RMID, NULL);
+    if(shmctl(shmId,IPC_RMID, NULL)==-1){
+        printf("\n error on shm remove");
+        exit(-1);
+    }
     msgctl(msgqI , IPC_RMID, NULL);
     msgctl(msgqR , IPC_RMID, NULL);
 }

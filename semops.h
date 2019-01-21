@@ -10,7 +10,7 @@
 #include <sys/msg.h>
 
 
-#define POP_SIZE 2
+#define POP_SIZE 4
 #define KEY 1493
 #define KEYBIN 1494
 #define shmkey 123
@@ -24,6 +24,18 @@ union semun {
     struct seminfo* __buf;
     #endif
 };
+
+struct MessageI{ //non serve
+    int from;
+    int vote;
+    int group;
+}messageI;
+
+struct MessageR{ //non serve
+    long mtype;
+    int from;
+    bool reply;
+}messageR;
 
 struct MyInvites{
     long mtype;
