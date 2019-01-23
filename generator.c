@@ -41,17 +41,17 @@ int seminit(){
     return semId;
 }
 
-int semBinInit(){
+int semBinInit(int x){
     int semIdB;
     
     // Check if semkey already exists, if so delete it
-    semIdB = semget(KEYBIN, 1, 0666);
+    semIdB = semget(x, 1, 0666);
     if (semIdB != -1) {
         semctl(semIdB, 0, IPC_RMID);
     }
 
     // Create new semaphore
-    semIdB = semget(KEYBIN, 1, 0666 | IPC_CREAT | IPC_EXCL);
+    semIdB = semget(x, 1, 0666 | IPC_CREAT | IPC_EXCL);
     if(semIdB == -1) {
         printf("error on semaphore creation");
         exit(-1);
@@ -70,10 +70,13 @@ int semBinInit(){
 int main(int argc, char** argv){
 
     //printf("Startig ...");
+    int sim_time = 10;
     int sem = seminit();
-    int semBin = semBinInit();
+    int semBin = semBinInit(KEYBIN);
+    int semBinTwo = semBinInit(KEYTWO);
     int size=0;
     int shmId;
+    int shmIdB;
     struct Students *shmp;
     int t=0;
     struct shmid_ds *buf; 
@@ -84,6 +87,10 @@ int main(int argc, char** argv){
     //Creae a shared memory
     if((shmId = shmget(shmkey ,0 , 0)) != -1){
         clean = shmctl(shmId,IPC_RMID, NULL);
+        printf("pulisco una vecchia SHM, funzione = %d", clean);
+    }
+    if((shmIdB = shmget(shmkeyB ,0 , 0)) != -1){
+        clean = shmctl(shmIdB,IPC_RMID, NULL);
         printf("pulisco una vecchia SHM, funzione = %d", clean);
     }
     
@@ -100,7 +107,15 @@ int main(int argc, char** argv){
     msgqR = msgget (msgkeyReply, IPC_CREAT | 0666);
     printf("\n msgR = %d", msgqR);
     shmId = shmget(shmkey ,sizeof(struct Students)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
-    //printf("shmID di creazione = %d", shmId);
+    if(shmId == -1){
+        printf("errore");
+        exit(-1);
+    }
+    shmIdB = shmget(shmkeyB ,sizeof(struct Groups)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
+    if(shmIdB == -1){
+        printf("errore");
+        exit(-1);
+    }
 
     for(int i = 0; i < POP_SIZE; i++) { 
        printf("\nStarting student %d", i);
@@ -121,6 +136,10 @@ int main(int argc, char** argv){
 
     struct sembuf* waitOp = generateWaitOp();
     semop(sem, waitOp, 1);
+
+   // sleep(sim_time);
+    //kill();
+
     for(int i=0;i<POP_SIZE;i++){ //waiting sons 
 
      wait(NULL);
@@ -144,4 +163,6 @@ int main(int argc, char** argv){
     }
     msgctl(msgqI , IPC_RMID, NULL);
     msgctl(msgqR , IPC_RMID, NULL);
+    shmctl(shmId,IPC_RMID, NULL);
+    shmctl(shmIdB,IPC_RMID, NULL);
 }
