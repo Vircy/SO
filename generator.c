@@ -14,7 +14,7 @@
 void print_groups(struct Groups *shmpB){
     int i=0;
     while(shmpB[i].max_vote != 0){
-        printf("\ngruppo numero %d , il voto del gruppo è %d ,dimensione del gruppo = %d , il gruppo è chiuso ? %d", i , shmpB[i].max_vote,shmpB[i].size ,shmpB[i].closed);
+        printf("\ngruppo numero %d , il voto del gruppo è %d ,dimensione del gruppo = %d , il gruppo di %d è chiuso ? %d", i , shmpB[i].max_vote,shmpB[i].size , shmpB[i].group_leader_id ,shmpB[i].closed );
         i++;
     }
 }
