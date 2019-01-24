@@ -8,9 +8,10 @@
 #include <sys/sem.h>
 #include <stdbool.h>
 #include <sys/msg.h>
+#include<signal.h>
 
 
-#define POP_SIZE 4
+#define POP_SIZE 10
 #define KEY 1493
 #define KEYBIN 1494
 #define KEYTWO 1495
@@ -31,7 +32,7 @@ struct MyInvites{
     long mtype;
     int from;
     int vote;
-    int group;
+    int willsize;
 }myInvite;
 
 struct MyReplys{
@@ -44,6 +45,7 @@ struct MyReplys{
 
 
 struct Groups{
+    int group_leader_id;
     int size; 
     int leader_willsize;
     bool closed;

@@ -11,9 +11,23 @@
 
 #define DEBUG 0
 
+void print_groups(struct Groups *shmpB){
+    int i=0;
+    while(shmpB[i].max_vote != 0){
+        printf("\ngruppo numero %d , il voto del gruppo è %d ,dimensione del gruppo = %d , il gruppo è chiuso ? %d", i , shmpB[i].max_vote,shmpB[i].size ,shmpB[i].closed);
+        i++;
+    }
+}
 
-
-
+void stop_child(struct Students * shmp){
+    int i=0;
+    sleep(4);
+    while(shmp[i].id != 0){
+        printf("\nsend kill");
+        kill(shmp[i].id, SIGINT);
+        i++;
+    }
+}
 
 
 
@@ -78,6 +92,7 @@ int main(int argc, char** argv){
     int shmId;
     int shmIdB;
     struct Students *shmp;
+    struct Groups *shmpB;
     int t=0;
     struct shmid_ds *buf; 
     int clean;
@@ -135,27 +150,23 @@ int main(int argc, char** argv){
     }
 
     struct sembuf* waitOp = generateWaitOp();
-    semop(sem, waitOp, 1);
-
+    semop(sem, waitOp, 1); 
+    shmp = ( struct Students*)shmat(shmId, NULL, 0);
+    shmpB = (struct Groups*)shmat(shmIdB, NULL , 0);
+    stop_child(shmp);
    // sleep(sim_time);
     //kill();
 
     for(int i=0;i<POP_SIZE;i++){ //waiting sons 
-
      wait(NULL);
     }  
 
-
-
-    
-    shmp = ( struct Students*)shmat(shmId, NULL, 0); 
     shmctl(shmId,IPC_SET, buf);
-     printf("\n wait terminata, il valore di shmp in generator è %p", shmp);
     while(t < POP_SIZE){
-        printf("\nSHM figlio con pid : %d", shmp[t].id);
+        printf("\nSHM figlio con pid : %d e voto %d", shmp[t].id , shmp[t].vote);
         t++;
     }
-
+    print_groups(shmpB);
     printf ("\n   in vero in print true = %d" , true);
     if(shmctl(shmId,IPC_RMID, NULL)==-1){
         printf("\n error on shm remove");
