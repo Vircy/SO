@@ -10,6 +10,26 @@
 #include <stdbool.h>
 #include "semops.h" // my header
 
+int group_size(){
+    int two,tree,four,random;
+    FILE *file;
+    file = fopen("config.txt","r");
+    if(file == NULL){
+        exit(-1);
+    }
+    random = (rand()%100);
+    printf("randomizzato %d",random);
+    fscanf(file,"%d %d %d", &two,&tree ,&four);
+    if(random<=two){
+        return 2;
+    }else if(random<= (two+tree)){
+        return 3;
+    }else{
+        return 4;
+    }
+}
+
+
 int set_group(struct Groups *shmpB, int j,struct MyReplys myReply){
     shmpB[j].size += 1; 
     if(shmpB[j].size == shmpB[j].leader_willsize){
@@ -27,6 +47,7 @@ int set_group(struct Groups *shmpB, int j,struct MyReplys myReply){
 }
 
 int main(int argc, char** argv){
+    int two,tree,four;
     struct Students *shmp;//pointer to the shared memory
     struct Groups *shmpB;
     int msgInvite;
@@ -44,6 +65,7 @@ int main(int argc, char** argv){
     struct MyInvites myInvite;
     struct Groups myGroup;
     srand(clock());
+
     if(getpid()%2 == 0){
         std.turn = 1;
     }else{
@@ -51,7 +73,7 @@ int main(int argc, char** argv){
     }
     std.id = getpid();
     std.vote = (rand()% 13)+18;
-    std.groupSize = 2;
+    std.groupSize = group_size(two,tree, four);
     std.group = false;
     msgInvite = msgget(msgkey ,0);
     if(msgInvite == -1 ){
@@ -114,6 +136,8 @@ int main(int argc, char** argv){
     bool leader = false;
     bool group_member = false;
     bool setDone = false;
+    bool simone = false;
+    bool simone_gruppo =false;
     int j = 0;
     for(; ; ){
        // printf("\n sono %d ho %d inviti",getpid() , maxInvites);
@@ -183,10 +207,36 @@ int main(int argc, char** argv){
             }
             counter = 0;
             while(shmp[counter].vote != 0 && maxInvites>0 && shmp[i].group== false ){//send invites
+            simone = true;
                 if(i != counter){
                    // printf("\n figlio %d, valore di counter %d",getpid(),counter, shmp[i].groupSize ,shmp[counter].groupSize);
                     if(shmp[counter].group == false /*&& shmp[counter].turn == shmp[i].turn*/){
                         if(shmp[counter].groupSize == shmp[i].groupSize){//pick a group mate fom SHM
+                            simone = false;
+                            myInvite.from=getpid();
+                            myInvite.mtype=shmp[counter].id;
+                            myInvite.vote= shmp[i].vote;
+                            myInvite.willsize=shmp[i].groupSize;
+                            maxInvites--;
+                            if(msgsnd(msgInvite,(void *)&myInvite,sizeof(struct MyInvites),0)== -1){
+                                printf("\nerror sendin a message on the invites Q");
+                                exit(-1);
+                            }
+                            printf("\n invite sent for %d from %d", shmp[counter].id,shmp[i].id);
+                        }
+                    }
+                }
+                counter++;
+            }
+            counter = 0;
+            while(shmp[counter].vote != 0 && maxInvites>0 &&leader == true ){//send invites
+            simone = true;
+                if(i != counter){
+                   // printf("\n figlio %d, valore di counter %d",getpid(),counter, shmp[i].groupSize ,shmp[counter].groupSize);
+                    if(shmp[counter].group == false /*&& shmp[counter].turn == shmp[i].turn*/){
+               
+                        if(shmp[counter].groupSize == shmp[i].groupSize){//pick a group mate fom SHM         
+                            simone  = false;
                             myInvite.from=getpid();
                             myInvite.mtype=shmp[counter].id;
                             myInvite.vote= shmp[i].vote;
@@ -203,10 +253,33 @@ int main(int argc, char** argv){
                 counter++;
             }
             
-              /*  if(maxInvites>0){
-                    ///////////NON HO TROVATO PERSONE DA INVITARE MA SONO SOLO  ( MI CHIUDO DA SOLO?)
+            if(simone == true ){
+                if(leader == true){
+                    semop(semTwo, waitOp,1);
+                    semop(semTwo , increaseOp,1);
+                    shmpB[j].closed = true;
+                    semop(semTwo,reduceOp,1);
+                }else{
+                    leader = true;
+                    semop(semTwo, waitOp,1);
+                    semop(semTwo , increaseOp,1);
+                    while(shmpB[j].max_vote != 0){
+                        j++;
+                    }
+                    shmpB[j].group_leader_id = shmp[i].id;
+                    shmpB[j].max_vote = shmp[i].vote;
+                    shmpB[j].leader_willsize = shmp[i].groupSize;
+                    setDone = true;
+                    semop(semB,waitOp,1);
+                    semop(semB,increaseOp,1);
+                    shmp[i].group = true;
+                    printf("\n the leader %d has set his group to  %d",getpid(),shmp[i].group);
+                    semop(semB,reduceOp,1);
+                    set_group(shmpB, j, myReply);
+                    semop(semTwo,reduceOp,1);
 
-                }  */
+                }
+            }
     }
 }
    // printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);
