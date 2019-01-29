@@ -197,7 +197,6 @@ int main(int argc, char** argv){
                         printf("\n error sendin a message inside ceckInvites ( OK)");
                         exit(-1);
                     } 
-                    exit(-1);
                     //working = false;////////////////////////////////////////////////////
                 }else{
                     myReply.from = getpid();
@@ -208,7 +207,7 @@ int main(int argc, char** argv){
                     if(msgsnd(msgReply,&myReply,sizeof(struct MyReplys),0)== -1){//send refuse
                         printf("\n error sendin a message inside ceckInvites (NOPE)");
                         exit(-1);
-                    }  
+                    }
                    // printf("\nsending a refuse to an invit i'm %d",getpid());
                 }
             }

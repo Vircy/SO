@@ -24,7 +24,7 @@ void print_groups(struct Groups *shmpB){
 
 void stop_child(struct Students * shmp){
     int i=0;
-    sleep(4);
+    sleep(10);
     while(shmp[i].id != 0){
         kill(shmp[i].id, SIGINT);
         i++;
