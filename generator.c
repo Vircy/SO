@@ -13,15 +13,18 @@
 
 void print_groups(struct Groups *shmpB){
     int i=0;
+    int students_n=shmpB[i].size;
     while(shmpB[i].max_vote != 0){
-        printf("\ngruppo numero %d , il voto del gruppo è %d ,dimensione del gruppo = %d , il gruppo di %d è chiuso ? %d", i , shmpB[i].max_vote,shmpB[i].size , shmpB[i].group_leader_id ,shmpB[i].closed );
+        printf("\ngruppo numero %d , il voto del gruppo è %d ,dimensione del gruppo = %d , dimensione desiderata %d, il gruppo di %d è chiuso ? %d", i , shmpB[i].max_vote,shmpB[i].size, shmpB[i].leader_willsize , shmpB[i].group_leader_id ,shmpB[i].closed );
         i++;
+        students_n =students_n + shmpB[i].size;
     }
+    printf("\n ci sono %d studenti nei gruppi", students_n);
 }
 
 void stop_child(struct Students * shmp){
     int i=0;
-    sleep(8);
+    sleep(4);
     while(shmp[i].id != 0){
         kill(shmp[i].id, SIGINT);
         i++;

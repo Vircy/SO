@@ -10,6 +10,10 @@
 #include <stdbool.h>
 #include "semops.h" // my header
 
+int ceckReply(){
+    return 0;
+}
+
 int group_size(){
     int two,tree,four,random;
     FILE *file;
@@ -18,7 +22,7 @@ int group_size(){
         exit(-1);
     }
     random = (rand()%100);
-    printf("randomizzato %d",random);
+   // printf("randomizzato %d",random);
     fscanf(file,"%d %d %d", &two,&tree ,&four);
     if(random<=two){
         return 2;
@@ -131,20 +135,21 @@ int main(int argc, char** argv){
     semop (sem , reduceOp , 1);
     semop (sem , waitOp, 1);                //w8tinf for other processes
 
-    int counter=0;
+    int counter=(i+1)%POP_SIZE;
     int maxInvites = (shmp[i].groupSize) -1;
     bool leader = false;
     bool group_member = false;
     bool setDone = false;
-    bool simone = false;
+    bool no_invite = false;
     bool simone_gruppo =false;
+    bool working = true;
     int j = 0;
-    for(; ; ){
+    while(working == true){
        // printf("\n sono %d ho %d inviti",getpid() , maxInvites);
         while(msgrcv(msgReply , &myReply, sizeof(struct MyReplys), getpid(),IPC_NOWAIT) != -1 ){  //    ceckReply
-           printf("\n cerco risposte , sono %d", getpid());
-            if(myReply.reply == true && group_member == false){
-                printf("\n new leader !  pid=  %d",getpid());
+         //  printf("\n cerco risposte , sono %d", getpid());
+            if(myReply.reply == true && shmp[i].group == false){
+          //      printf("\n new leader !  pid=  %d",getpid());
                 leader = true;
                 semop(semTwo, waitOp,1);
                 semop(semTwo , increaseOp,1);
@@ -160,7 +165,7 @@ int main(int argc, char** argv){
                     semop(semB,waitOp,1);
                     semop(semB,increaseOp,1);
                     shmp[i].group = true;
-                    printf("\n the leader %d has set his group to  %d",getpid(),shmp[i].group);
+                  //  printf("\n the leader %d has set his group to  %d",getpid(),shmp[i].group);
                     semop(semB,reduceOp,1);
 
                 }
@@ -168,15 +173,15 @@ int main(int argc, char** argv){
                 semop(semTwo,reduceOp,1);
                
             }else if(myReply.reply == false){
-                printf("ricevuto rifiuto, sono %d" ,getpid());
+              //  printf("ricevuto rifiuto, sono %d" ,getpid());
                 maxInvites = maxInvites+1;
             }
             
         }
         while(msgrcv(msgInvite , &myInvite, sizeof(struct MyInvites), getpid(),IPC_NOWAIT) != -1){  // ceckInvites
-        printf("\n cerco inviti, sono %d ",getpid());
+       // printf("\n cerco inviti, sono %d ",getpid());
                 if(myInvite.willsize == shmp[i].groupSize  && shmp[i].group == false && maxInvites == (shmp[i].groupSize-1)){
-                    printf("\n found an invite for %d from %d , sending accept" ,getpid() ,myInvite.from);
+                   // printf("\n found an invite for %d from %d , sending accept" ,getpid() ,myInvite.from);
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
                     myReply.reply = true;
@@ -192,6 +197,8 @@ int main(int argc, char** argv){
                         printf("\n error sendin a message inside ceckInvites ( OK)");
                         exit(-1);
                     } 
+                    exit(-1);
+                    //working = false;////////////////////////////////////////////////////
                 }else{
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
@@ -202,62 +209,61 @@ int main(int argc, char** argv){
                         printf("\n error sendin a message inside ceckInvites (NOPE)");
                         exit(-1);
                     }  
-                    printf("\nsending a refuse to an invit i'm %d",getpid());
+                   // printf("\nsending a refuse to an invit i'm %d",getpid());
                 }
             }
-            counter = 0;
-            while(shmp[counter].vote != 0 && maxInvites>0 && shmp[i].group== false ){//send invites
-            simone = true;
+            while(counter!= i&& maxInvites>0 && shmp[i].group== false ){//send invites
+            no_invite = true;
                 if(i != counter){
                    // printf("\n figlio %d, valore di counter %d",getpid(),counter, shmp[i].groupSize ,shmp[counter].groupSize);
-                    if(shmp[counter].group == false /*&& shmp[counter].turn == shmp[i].turn*/){
+                    if(shmp[counter].group == false && shmp[counter].turn == shmp[i].turn && shmp[counter].vote>shmp[i].vote){
                         if(shmp[counter].groupSize == shmp[i].groupSize){//pick a group mate fom SHM
-                            simone = false;
+                            no_invite = false;
                             myInvite.from=getpid();
                             myInvite.mtype=shmp[counter].id;
                             myInvite.vote= shmp[i].vote;
                             myInvite.willsize=shmp[i].groupSize;
                             maxInvites--;
-                            if(msgsnd(msgInvite,(void *)&myInvite,sizeof(struct MyInvites),0)== -1){
+                            if(msgsnd(msgInvite,(void *)&myInvite,sizeof(struct MyInvites),0)== -1){//HO MESSSO IPC_NOWAIT
                                 printf("\nerror sendin a message on the invites Q");
                                 exit(-1);
                             }
-                            printf("\n invite sent for %d from %d", shmp[counter].id,shmp[i].id);
+                          //  printf("\n invite sent for %d from %d", shmp[counter].id,shmp[i].id);
                         }
                     }
                 }
-                counter++;
+                counter = (counter+1)%POP_SIZE;
             }
-            counter = 0;
-            while(shmp[counter].vote != 0 && maxInvites>0 &&leader == true ){//send invites
-            simone = true;
+            while(counter!= i  && maxInvites>0 && leader == true){//send invites
+            no_invite = true;
                 if(i != counter){
                    // printf("\n figlio %d, valore di counter %d",getpid(),counter, shmp[i].groupSize ,shmp[counter].groupSize);
                     if(shmp[counter].group == false /*&& shmp[counter].turn == shmp[i].turn*/){
                
-                        if(shmp[counter].groupSize == shmp[i].groupSize){//pick a group mate fom SHM         
-                            simone  = false;
+                        if(shmp[counter].groupSize == shmp[i].groupSize && shmp[counter].turn == shmp[i].turn){//pick a group mate fom SHM         
+                            no_invite  = false;
                             myInvite.from=getpid();
                             myInvite.mtype=shmp[counter].id;
                             myInvite.vote= shmp[i].vote;
                             myInvite.willsize=shmp[i].groupSize;
                             maxInvites--;
                             if(msgsnd(msgInvite,(void *)&myInvite,sizeof(struct MyInvites),0)== -1){
-                                printf("\nerror sendin a message on the invites Q");
+                              //  printf("\nerror sendin a message on the invites Q");
                                 exit(-1);
                             }
-                            printf("\n invite sent for %d from %d", shmp[counter].id,shmp[i].id);
+                            //printf("\n invite sent for %d from %d", shmp[counter].id,shmp[i].id);
                         }
                     }
                 }
-                counter++;
+               counter = (counter+1)%POP_SIZE;
             }
             
-            if(simone == true ){
+            if(no_invite == true && maxInvites>0){
                 if(leader == true){
                     semop(semTwo, waitOp,1);
                     semop(semTwo , increaseOp,1);
                     shmpB[j].closed = true;
+                    //working = false;/////////////////////////////////////////////
                     semop(semTwo,reduceOp,1);
                 }else{
                     leader = true;
@@ -273,14 +279,20 @@ int main(int argc, char** argv){
                     semop(semB,waitOp,1);
                     semop(semB,increaseOp,1);
                     shmp[i].group = true;
-                    printf("\n the leader %d has set his group to  %d",getpid(),shmp[i].group);
+                    //printf("\n the leader %d has set his group to  %d",getpid(),shmp[i].group);
                     semop(semB,reduceOp,1);
                     set_group(shmpB, j, myReply);
                     semop(semTwo,reduceOp,1);
 
                 }
             }
+         /*   if(shmp[i].group == true && leader ==false){
+                working =false;
+            }*/
     }
+    printf("\nSKSKLGSJLGJLHL");
+    //shmdt(shmp);
+    //shmdt(shmpB);
 }
    // printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);
 
