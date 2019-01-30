@@ -11,7 +11,7 @@
 #include<signal.h>
 
 
-#define POP_SIZE 100
+#define POP_SIZE 300
 #define KEY 1493
 #define KEYBIN 1494
 #define KEYTWO 1495

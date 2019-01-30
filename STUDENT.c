@@ -35,9 +35,11 @@ int group_size(){
 
 
 int set_group(struct Groups *shmpB, int j,struct MyReplys myReply){
+    bool working = true;
     shmpB[j].size += 1; 
     if(shmpB[j].size == shmpB[j].leader_willsize){
         shmpB[j].closed = true;
+        working = false;
     }
     if(myReply.willSize == shmpB[j].leader_willsize){
         if(myReply.vote > shmpB[j].max_vote){
@@ -47,7 +49,7 @@ int set_group(struct Groups *shmpB, int j,struct MyReplys myReply){
             shmpB[j].max_vote = myReply.vote;
     }
     
-    return 1;
+    return working;
 }
 
 int main(int argc, char** argv){
@@ -169,7 +171,7 @@ int main(int argc, char** argv){
                     semop(semB,reduceOp,1);
 
                 }
-                set_group(shmpB, j, myReply);
+                working = set_group(shmpB, j, myReply);////////////////////////////////////////////////////////
                 semop(semTwo,reduceOp,1);
                
             }else if(myReply.reply == false){
@@ -181,7 +183,7 @@ int main(int argc, char** argv){
         while(msgrcv(msgInvite , &myInvite, sizeof(struct MyInvites), getpid(),IPC_NOWAIT) != -1){  // ceckInvites
        // printf("\n cerco inviti, sono %d ",getpid());
                 if(myInvite.willsize == shmp[i].groupSize  && shmp[i].group == false && maxInvites == (shmp[i].groupSize-1)){
-                    printf("\n found an invite for %d from %d , sending accept" ,getpid() ,myInvite.from);
+                   // printf("\n found an invite for %d from %d , sending accept" ,getpid() ,myInvite.from);
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
                     myReply.reply = true;
@@ -197,7 +199,7 @@ int main(int argc, char** argv){
                         printf("\n error sendin a message inside ceckInvites ( OK)");
                         exit(-1);
                     } 
-                    //working = false;////////////////////////////////////////////////////
+                    working = false;////////////////////////////////////////////////////
                 }else{
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
@@ -266,7 +268,7 @@ int main(int argc, char** argv){
                     semop(semTwo, waitOp,1);
                     semop(semTwo , increaseOp,1);
                     shmpB[j].closed = true;
-                    //working = false;/////////////////////////////////////////////
+                    working = false;/////////////////////////////////////////////
                     semop(semTwo,reduceOp,1);
                 }else{
                     leader = true;
@@ -292,9 +294,8 @@ int main(int argc, char** argv){
             }
          
     }
-    printf("\nSKSKLGSJLGJLHL");
-    //shmdt(shmp);
-    //shmdt(shmpB);
+    shmdt(shmp);
+    shmdt(shmpB);
 }
    // printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);
 
