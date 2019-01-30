@@ -24,7 +24,7 @@ void print_groups(struct Groups *shmpB){
 
 void stop_child(struct Students * shmp){
     int i=0;
-    sleep(10);
+    sleep(4);
     while(shmp[i].id != 0){
         kill(shmp[i].id, SIGINT);
         i++;
@@ -165,7 +165,7 @@ int main(int argc, char** argv){
 
     shmctl(shmId,IPC_SET, buf);
     while(t < POP_SIZE){
-        printf("\nSHM figlio con pid : %d , voto %d , stato di gruppo = %d e dimensione desiderata %d", shmp[t].id , shmp[t].vote, shmp[t].group , shmp[t].groupSize);
+        printf("\nSHM figlio con pid : %d , voto %d , stato di gruppo = %d e dimensione desiderata %d , turno %d", shmp[t].id , shmp[t].vote, shmp[t].group , shmp[t].groupSize,shmp[t].turn);
         t++;
     }
     print_groups(shmpB);
