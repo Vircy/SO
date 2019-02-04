@@ -23,10 +23,13 @@ void print_groups(struct Groups *shmpB){
 }
 
 void stop_child(struct Students * shmp){
+    
     int i=0;
     sleep(5);
-    while(shmp[i].id != 0){
-        kill(shmp[i].id, SIGINT);
+    while(i< POP_SIZE){
+        if(kill(shmp[i].id,SIGUSR1 /*SIGINT*/)==-1){
+            printf("\nERRORE sigint");
+        }
         i++;
     }
 }
@@ -176,6 +179,9 @@ int main(int argc, char** argv){
     }
     msgctl(msgqI , IPC_RMID, NULL);
     msgctl(msgqR , IPC_RMID, NULL);
+    shmdt(shmp);
+    shmdt(shmpB);
     shmctl(shmId,IPC_RMID, NULL);
-    shmctl(shmIdB,IPC_RMID, NULL);
+    shmctl(shmIdB,IPC_RMID, NULL); 
+    return 0;
 }

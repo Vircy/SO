@@ -9,11 +9,18 @@
 #include <sys/shm.h>
 #include <stdbool.h>
 #include "semops.h" // my header
+bool working = true;
+
 
 int ceckReply(){
     return 0;
 }
-
+void sig_handler(){
+    //if(signo == SIGINT){
+        //printf("\nsignal received\n");
+        working = false;
+    //}
+}
 int group_size(){
     int two,tree,four,random;
     FILE *file;
@@ -40,6 +47,7 @@ int set_group(struct Groups *shmpB, int j,struct MyReplys myReply){
     if(shmpB[j].size == shmpB[j].leader_willsize){
         shmpB[j].closed = true;
         working = false;
+      //  printf("\nset_group_close\n");
     }
     if(myReply.willSize == shmpB[j].leader_willsize){
         if(myReply.vote > shmpB[j].max_vote){
@@ -70,6 +78,9 @@ int main(int argc, char** argv){
     struct MyReplys myReply;
     struct MyInvites myInvite;
     struct Groups myGroup;
+    if(signal(SIGUSR1, sig_handler)==SIG_ERR){
+        printf("\ncan't catch signal\n");
+    }
     srand(clock());
 
     if(getpid()%2 == 0){
@@ -144,7 +155,7 @@ int main(int argc, char** argv){
     bool setDone = false;
     bool no_invite = false;
     bool no_invite_grup =false;
-    bool working = true;
+   // bool working = true;
     int j = 0;
     while(working == true){
       //  printf("\n sono %d ho %d inviti",getpid() , maxInvites);
@@ -200,6 +211,7 @@ int main(int argc, char** argv){
                         exit(-1);
                     } 
                     working = false;////////////////////////////////////////////////////
+                    //printf("\ninvite_accepted\n");
                 }else{
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
@@ -264,13 +276,14 @@ int main(int argc, char** argv){
             }
         
             if(no_invite == true && maxInvites>0 ){
-                if(leader == true){
+                if(leader == true && ((shmpB[j].size+maxInvites) == shmpB[j].leader_willsize)){
                     semop(semTwo, waitOp,1);
                     semop(semTwo , increaseOp,1);
                     shmpB[j].closed = true;
                     working = false;/////////////////////////////////////////////
+                   // printf("\nno_invites_found_selfclose\n");
                     semop(semTwo,reduceOp,1);
-                }else{
+                }else if(leader == false){
                     leader = true;
                     semop(semTwo, waitOp,1);
                     semop(semTwo , increaseOp,1);
@@ -294,8 +307,17 @@ int main(int argc, char** argv){
             }
          
     }
-    shmdt(shmp);
-    shmdt(shmpB);
+    /*if(shmdt(shmp)== -1){
+        printf("\nerror detatching students shm");
+        exit(-1);
+    }
+    if(shmdt(shmpB)== -1){
+        printf("\nerror detatching groups shm");
+        exit(-1);
+    }*/
+   // printf("\nCIAO_ho_finito_il_working, %d \n", getpid());
+    //sleep(20);
+    return 0;
 }
    // printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);
 
