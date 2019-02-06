@@ -47,7 +47,6 @@ int set_group(struct Groups *shmpB, int j,struct MyReplys myReply){
     if(shmpB[j].size == shmpB[j].leader_willsize){
         shmpB[j].closed = true;
         working = false;
-      //  printf("\nset_group_close\n");
     }
     if(myReply.willSize == shmpB[j].leader_willsize){
         if(myReply.vote > shmpB[j].max_vote){
@@ -62,7 +61,7 @@ int set_group(struct Groups *shmpB, int j,struct MyReplys myReply){
 
 int main(int argc, char** argv){
     int two,tree,four;
-    struct Students *shmp;//pointer to the shared memory
+    struct Students *shmp;
     struct Groups *shmpB;
     int msgInvite;
     int msgReply;

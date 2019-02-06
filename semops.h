@@ -12,6 +12,7 @@
 
 
 #define POP_SIZE 1000
+#define sim_time 5
 #define KEY 1493
 #define KEYBIN 1494
 #define KEYTWO 1495
@@ -19,6 +20,8 @@
 #define shmkeyB 124
 #define msgkey 2001
 #define msgkeyReply 2002
+
+
 union semun {
     int val;
     struct semid_ds* buf;

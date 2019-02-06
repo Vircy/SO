@@ -9,23 +9,30 @@
 #include "semops.h" // my header
 #include <stdbool.h>
 
-#define DEBUG 0
 
 void print_groups(struct Groups *shmpB){
     int i=0;
-    int students_n=shmpB[i].size;
+    int students_n=0;
+    int vote_counter=0;
+    int medium_vote=0;
     while(shmpB[i].max_vote != 0){
         printf("\ngruppo numero %d , il voto del gruppo è %d ,dimensione del gruppo = %d , dimensione desiderata %d, il gruppo di %d è chiuso ? %d", i , shmpB[i].max_vote,shmpB[i].size, shmpB[i].leader_willsize , shmpB[i].group_leader_id ,shmpB[i].closed );
-        i++;
+        if(shmpB[i].closed==true){
+            vote_counter = vote_counter + (shmpB[i].max_vote * shmpB[i].size);
+        }else{
+            vote_counter = vote_counter + 0;
+        }
         students_n =students_n + shmpB[i].size;
+        i++;
     }
-    printf("\n ci sono %d studenti nei gruppi", students_n);
+    medium_vote = vote_counter/students_n;
+    printf("\n ci sono %d studenti nei gruppi\n il voto medio dei gruppi è %d", students_n, medium_vote);
 }
 
 void stop_child(struct Students * shmp){
     
     int i=0;
-    sleep(5);
+    sleep(sim_time);
     while(i< POP_SIZE){
         if(kill(shmp[i].id,SIGUSR1 /*SIGINT*/)==-1){
             printf("\nERRORE sigint");
@@ -88,8 +95,6 @@ int semBinInit(int x){
 
 int main(int argc, char** argv){
 
-    //printf("Startig ...");
-    int sim_time = 10;
     int sem = seminit();
     int semBin = semBinInit(KEYBIN);
     int semBinTwo = semBinInit(KEYTWO);
@@ -104,7 +109,9 @@ int main(int argc, char** argv){
     int msgqI;
     int msgqR;
     int cecker;
-    //Creae a shared memory
+    int st_vote_counter=0;
+    int st_medium_vote=0;
+    
     if((shmId = shmget(shmkey ,0 , 0)) != -1){
         clean = shmctl(shmId,IPC_RMID, NULL);
         printf("pulisco una vecchia SHM, funzione = %d", clean);
@@ -116,11 +123,11 @@ int main(int argc, char** argv){
     
     if((msgqI = msgget(msgkey , 0666 ))!=-1){
         printf("errore nella creazione della MSGQ");
-        msgctl(msgqI , IPC_RMID, NULL);////////////////////////////////////DA VERIFICARE L'ULIMO PARAMETRO
+        msgctl(msgqI , IPC_RMID, NULL);
     }
     if((msgqR = msgget(msgkeyReply , 0666 ))!=-1){
         printf("errore nella creazione della MSGQ");
-        msgctl(msgqR , IPC_RMID, NULL );////////////////////////////////////DA VERIFICARE L'ULIMO PARAMETRO
+        msgctl(msgqR , IPC_RMID, NULL );
     }
     msgqI = msgget (msgkey , IPC_CREAT | 0666);
     printf("\n msgI = %d", msgqI);
@@ -159,8 +166,6 @@ int main(int argc, char** argv){
     shmp = ( struct Students*)shmat(shmId, NULL, 0);
     shmpB = (struct Groups*)shmat(shmIdB, NULL , 0);
     stop_child(shmp);
-   // sleep(sim_time);
-    //kill();
 
     for(int i=0;i<POP_SIZE;i++){ //waiting sons 
      wait(NULL);
@@ -169,9 +174,12 @@ int main(int argc, char** argv){
     shmctl(shmId,IPC_SET, buf);
     while(t < POP_SIZE){
         printf("\nSHM figlio con pid : %d , voto %d , stato di gruppo = %d e dimensione desiderata %d , turno %d", shmp[t].id , shmp[t].vote, shmp[t].group , shmp[t].groupSize,shmp[t].turn);
+        st_vote_counter = st_vote_counter+shmp[t].vote;
         t++;
     }
+    st_medium_vote = st_vote_counter/POP_SIZE;
     print_groups(shmpB);
+    printf("\nvoto medio degli studenti = %d",st_medium_vote);
     printf ("\n   in vero in print true = %d" , true);
     if(shmctl(shmId,IPC_RMID, NULL)==-1){
         printf("\n error on shm remove");
