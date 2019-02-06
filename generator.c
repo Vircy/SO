@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 
-void print_groups(struct Groups *shmpB){
+void print_groups(struct Groups *shmpB , struct Students *shmp){
     int i=0;
     int students_n=0;
     int vote_counter=0;
@@ -18,11 +18,21 @@ void print_groups(struct Groups *shmpB){
     while(shmpB[i].max_vote != 0){
         printf("\ngruppo numero %d , il voto del gruppo è %d ,dimensione del gruppo = %d , dimensione desiderata %d, il gruppo di %d è chiuso ? %d", i , shmpB[i].max_vote,shmpB[i].size, shmpB[i].leader_willsize , shmpB[i].group_leader_id ,shmpB[i].closed );
         if(shmpB[i].closed==true){
+            if(shmpB[i].leader_willsize != shmpB[i].size){
+                shmpB[i].max_vote = shmpB[i].max_vote -3;
+            }
             vote_counter = vote_counter + (shmpB[i].max_vote * shmpB[i].size);
+
         }else{
+            shmpB[i].max_vote = 0;
             vote_counter = vote_counter + 0;
         }
         students_n =students_n + shmpB[i].size;
+        i++;
+    }
+    i=0;
+    while( i < POP_SIZE){
+        kill(shmp[i].id,SIGCONT);
         i++;
     }
     medium_vote = vote_counter/students_n;
@@ -167,9 +177,7 @@ int main(int argc, char** argv){
     shmpB = (struct Groups*)shmat(shmIdB, NULL , 0);
     stop_child(shmp);
 
-    for(int i=0;i<POP_SIZE;i++){ //waiting sons 
-     wait(NULL);
-    }  
+   
 
     shmctl(shmId,IPC_SET, buf);
     while(t < POP_SIZE){
@@ -178,13 +186,16 @@ int main(int argc, char** argv){
         t++;
     }
     st_medium_vote = st_vote_counter/POP_SIZE;
-    print_groups(shmpB);
+    print_groups(shmpB, shmp);
     printf("\nvoto medio degli studenti = %d",st_medium_vote);
     printf ("\n   in vero in print true = %d" , true);
     if(shmctl(shmId,IPC_RMID, NULL)==-1){
         printf("\n error on shm remove");
         exit(-1);
-    }
+    } 
+    for(int i=0;i<POP_SIZE;i++){ //waiting sons 
+     wait(NULL);
+    }  
     msgctl(msgqI , IPC_RMID, NULL);
     msgctl(msgqR , IPC_RMID, NULL);
     shmdt(shmp);

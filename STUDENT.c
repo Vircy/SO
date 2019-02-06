@@ -48,12 +48,12 @@ int set_group(struct Groups *shmpB, int j,struct MyReplys myReply){
         shmpB[j].closed = true;
         working = false;
     }
-    if(myReply.willSize == shmpB[j].leader_willsize){
+   // if(myReply.willSize == shmpB[j].leader_willsize){
         if(myReply.vote > shmpB[j].max_vote){
             shmpB[j].max_vote = myReply.vote;
-        }
-    }else if((myReply.vote -3)> shmpB[j].max_vote) {
-            shmpB[j].max_vote = myReply.vote;
+      //  }
+    }else/* if((myReply.vote -3)> shmpB[j].max_vote)*/ {
+     //       shmpB[j].max_vote = myReply.vote;
     }
     
     return working;
@@ -146,7 +146,7 @@ int main(int argc, char** argv){
        
     semop (sem , reduceOp , 1);
     semop (sem , waitOp, 1);                //w8tinf for other processes
-
+    int my_group_lead=0;
     int counter=(i+1)%POP_SIZE;
     int maxInvites = (shmp[i].groupSize) -1;
     bool leader = false;
@@ -154,14 +154,10 @@ int main(int argc, char** argv){
     bool setDone = false;
     bool no_invite = false;
     bool no_invite_grup =false;
-   // bool working = true;
     int j = 0;
     while(working == true){
-      //  printf("\n sono %d ho %d inviti",getpid() , maxInvites);
         while(msgrcv(msgReply , &myReply, sizeof(struct MyReplys), getpid(),IPC_NOWAIT) != -1 ){  //    checkReply
-          // printf("\n cerco risposte , sono %d", getpid());
-            if(myReply.reply == true/* && shmp[i].group == false*/){
-               //printf("\n new leader !  pid=  %d recived accept from %d, still have %d invites",getpid(),myReply.from , maxInvites);
+            if(myReply.reply == true){
                 leader = true;
                 semop(semTwo, waitOp,1);
                 semop(semTwo , increaseOp,1);
@@ -177,23 +173,19 @@ int main(int argc, char** argv){
                     semop(semB,waitOp,1);
                     semop(semB,increaseOp,1);
                     shmp[i].group = true;
-                  //  printf("\n the leader %d has set his group to  %d",getpid(),shmp[i].group);
                     semop(semB,reduceOp,1);
 
                 }
-                working = set_group(shmpB, j, myReply);////////////////////////////////////////////////////////
+                working = set_group(shmpB, j, myReply);
                 semop(semTwo,reduceOp,1);
                
             }else if(myReply.reply == false){
-              // printf("ricevuto rifiuto, sono %d" ,getpid());
                 maxInvites = maxInvites+1;
             }
             
         }
         while(msgrcv(msgInvite , &myInvite, sizeof(struct MyInvites), getpid(),IPC_NOWAIT) != -1){  // ceckInvites
-       // printf("\n cerco inviti, sono %d ",getpid());
                 if(myInvite.willsize == shmp[i].groupSize  && shmp[i].group == false && maxInvites == (shmp[i].groupSize-1)){
-                   // printf("\n found an invite for %d from %d , sending accept" ,getpid() ,myInvite.from);
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
                     myReply.reply = true;
@@ -209,8 +201,8 @@ int main(int argc, char** argv){
                         printf("\n error sendin a message inside ceckInvites ( OK)");
                         exit(-1);
                     } 
-                    working = false;////////////////////////////////////////////////////
-                    //printf("\ninvite_accepted\n");
+                    my_group_lead=myInvite.from;
+                    working = false;
                 }else{
                     myReply.from = getpid();
                     myReply.mtype = myInvite.from;
@@ -306,16 +298,25 @@ int main(int argc, char** argv){
             }
          
     }
-    /*if(shmdt(shmp)== -1){
+    kill( getpid(),SIGSTOP);
+    if(leader==true){
+        printf("\nsono %d , il mio voto di SO è %d\n", getpid() , shmpB[j].max_vote);
+    }else{
+        i=0;
+        while(shmpB[i].group_leader_id != my_group_lead && shmpB[i].group_leader_id!= 0){
+            i++;
+        }
+        printf("\nsono %d , il mio voto di SO è %d ,leader:%d \n", getpid() , shmpB[i].max_vote , my_group_lead);
+    }
+    if(shmdt(shmp)== -1){
         printf("\nerror detatching students shm");
         exit(-1);
     }
     if(shmdt(shmpB)== -1){
         printf("\nerror detatching groups shm");
         exit(-1);
-    }*/
-   // printf("\nCIAO_ho_finito_il_working, %d \n", getpid());
-    //sleep(20);
+    }
+
     return 0;
 }
    // printf(" sono il figlio [pid] %d , voto AE[%d], sono nel turno T%d\n", getpid(), votoAE, turno);
