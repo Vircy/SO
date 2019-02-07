@@ -1,13 +1,5 @@
-#include <unistd.h> 
-#include <stdlib.h>
-#include <wait.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/sem.h>
-#include <sys/shm.h>
+
 #include "semops.h" // my header
-#include <stdbool.h>
 
 
 void print_groups(struct Groups *shmpB , struct Students *shmp){
@@ -57,45 +49,45 @@ void stop_child(struct Students * shmp){
 int seminit(){
     int semId;
     
-    // Check if semkey already exists, if so delete it
-    semId = semget(KEY, 1, 0666);
+    
+    semId = semget(KEY, 1, 0666);               // Check if semkey already exists, if so delete it
     if (semId != -1) {
         semctl(semId, 0, IPC_RMID);
     }
 
-    // Create new semaphore
-    semId = semget(KEY, 1, 0666 | IPC_CREAT | IPC_EXCL);
+    
+    semId = semget(KEY, 1, 0666 | IPC_CREAT | IPC_EXCL);        // Create new semaphore
     if(semId == -1) {
         printf("error on semaphore creation");
         exit(-1);
     }
 
-    // Initialise semaphore
+    
     union semun args;
-    args.val = POP_SIZE; //+debug
-    semctl(semId, 0, SETVAL, args.val);
+    args.val = POP_SIZE; 
+    semctl(semId, 0, SETVAL, args.val);         // Initialise semaphore
     return semId;
 }
 
 int semBinInit(int x){
     int semIdB;
     
-    // Check if semkey already exists, if so delete it
-    semIdB = semget(x, 1, 0666);
+    
+    semIdB = semget(x, 1, 0666);            // Check if semkey already exists, if so delete it
     if (semIdB != -1) {
         semctl(semIdB, 0, IPC_RMID);
     }
 
-    // Create new semaphore
-    semIdB = semget(x, 1, 0666 | IPC_CREAT | IPC_EXCL);
+    
+    semIdB = semget(x, 1, 0666 | IPC_CREAT | IPC_EXCL);                // Create new semaphore
     if(semIdB == -1) {
         printf("error on semaphore creation");
         exit(-1);
     }
 
-    // Initialise semaphore
-    union semun argsB;
-    argsB.val = 0; //+debug
+    
+    union semun argsB;              // Initialise semaphore
+    argsB.val = 0; 
     semctl(semIdB, 0, SETVAL, argsB.val);
     return semIdB;
 }
@@ -132,17 +124,25 @@ int main(int argc, char** argv){
     }
     
     if((msgqI = msgget(msgkey , 0666 ))!=-1){
-        printf("errore nella creazione della MSGQ");
+        printf("pulisco una vecchia MSGQ");
         msgctl(msgqI , IPC_RMID, NULL);
     }
     if((msgqR = msgget(msgkeyReply , 0666 ))!=-1){
-        printf("errore nella creazione della MSGQ");
+        printf("pulisco una vecchia MSGQ");
         msgctl(msgqR , IPC_RMID, NULL );
     }
     msgqI = msgget (msgkey , IPC_CREAT | 0666);
     printf("\n msgI = %d", msgqI);
+    if(msgqI== -1){
+        printf("errore");
+        exit(-1);
+    }
     msgqR = msgget (msgkeyReply, IPC_CREAT | 0666);
     printf("\n msgR = %d", msgqR);
+    if(msgqR == -1){
+        printf("errore");
+        exit(-1);
+    }
     shmId = shmget(shmkey ,sizeof(struct Students)*(POP_SIZE) , IPC_CREAT | IPC_EXCL | 0666);
     if(shmId == -1){
         printf("errore");

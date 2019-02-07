@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <sys/msg.h>
 #include<signal.h>
+#include <sys/shm.h>
 
 
 #define POP_SIZE 1000

@@ -10,10 +10,6 @@
 #include <sys/msg.h>
 
 
-//#define POP_SIZE 5
-//#define KEY 1493
-///#define shmkey IPC_PRIVATE
-
 struct MyInvites{
     long mtype;
     int vote;
